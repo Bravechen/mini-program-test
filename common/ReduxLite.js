@@ -122,7 +122,9 @@ function combineReducers(reducers){
  * @param type {Symbol/String}
  */
 function createAction(type){
+  
   return function(data){
+
     return {
       type:type,
       data:data

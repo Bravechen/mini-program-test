@@ -1,7 +1,8 @@
-let util = require('../utils/util');
+let util = require('./util');
+import WM from './WatchManager';
 //===================================================
 let renderList = {};
-let vmoList = {};
+let vmList = {};
 const VMO_ID = 'vmo_id';
 let renderTimer = null;
 const RENDER_TIME = 100;
@@ -10,13 +11,14 @@ const RENDER_TIME = 100;
 /**
  * VM配置对象
  */
-class VMOption{
+class VM{
   constructor(principal,id){
     this.principal = principal;
     this[VMO_ID] = id;
     this.optData = {};
   }
   /**
+   * @internal
    * 执行渲染，数据生效
    */
   validate(){
@@ -34,8 +36,9 @@ class VMOption{
     this.optData = {};
   }
   /**
+   * @internal
    * 提交属性改动
-   * @param {*} propName 
+   * @param {String} propName 
    * @param {*} value 
    */
   commit(propName,value){
@@ -55,10 +58,6 @@ class VMOption{
     //only for debug
     // this.validateTime = null;
   }
-
-  watch(list){}
-
-  unwatch(...args){}
 }
 //================================================
 class VMProxy{

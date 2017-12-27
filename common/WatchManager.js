@@ -1,6 +1,6 @@
 const util = require('../utils/util');
 let _store;
-const watchList = {};
+let watchList = {};
 const origin = {};
 const cbList = {};
 const WM_ID = 'wm_id';
@@ -134,17 +134,23 @@ const exportObj = {
   get store(){
     return _store;
   },
-  watcherify(vm,list){},
-  addWatchers(){},
+
+  watcherify(vm,list){
+
+  },
+  
+  addWatchers(list){
+
+  },
   /**
    * 获得一个watcher单例
    */
-  getWatchProxy(){
-    if(!watcher){
-      watcher = new WatchProxy();
-    }
-    return watcher;
-  },
+  // getWatchProxy(){
+  //   if(!watcher){
+  //     watcher = new WatchProxy();
+  //   }
+  //   return watcher;
+  // },
   /**
    * 合并监控常量
    * @param {*} propNames  
