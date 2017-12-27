@@ -11,12 +11,10 @@ const RENDER_TIME = 100;
  * VM配置对象
  */
 class VMOption{
-  constructor(vm,id){
-    this.vm = vm;
+  constructor(principal,id){
+    this.principal = principal;
     this[VMO_ID] = id;
     this.optData = {};
-    //only use debug
-    // this.validateTime = new Date().getTime();
   }
   /**
    * 执行渲染，数据生效
@@ -29,13 +27,8 @@ class VMOption{
     if(noUse){
       return;
     }
-    // console.log("before validate vm=============>",this.optData,this.vm);
-    this.vm.setData(this.optData);
     
-    //only for debug
-    // let newTime = new Date().getTime();
-    //console.log("after validate vm==============>",this.optData,'========>',this.vm.data,'====duration====>',newTime - this.validateTime);
-    // this.validateTime = newTime;
+    this.principal.setData(this.optData);
 
     //重置对象等待下一次
     this.optData = {};
@@ -58,17 +51,25 @@ class VMOption{
   destory(){
     this.optData = null;
     this[VMO_ID] = null;
-    this.vm = null;
+    this.principal = null;
     //only for debug
     // this.validateTime = null;
   }
+
+  watch(list){}
+
+  unwatch(...args){}
 }
 //================================================
 class VMProxy{
   constructor(id){
     this[VMO_ID] = id;
   }
-  
+  /**
+   * 
+   * @param {*} prop 
+   * @param {*} value 
+   */
   commit(prop,value){
     if(typeof prop === 'string'){
       commitProperty(this[VMO_ID],prop,value);
@@ -78,12 +79,16 @@ class VMProxy{
     }
     return this;
   }
-
+  /**
+   * 
+   */
   validateNow(){
     validateNow(this[VMO_ID]);
     return this;
   }
-
+  /**
+   * 销毁vmp
+   */
   destory(){
     if(this.props){
       const keys = Object.keys(this.props);
@@ -93,6 +98,20 @@ class VMProxy{
       this.props = null;
     }    
     destoryVMO(this[VMO_ID]);  
+  }
+  /**
+   * 监控哪些属性的改变
+   * @param {*} list 
+   */
+  watch(list){
+
+  }
+  /**
+   * 解除对属性的监控
+   * @param {*} args 
+   */
+  unwatch(...args){
+
   }
 }
 //===============================================
@@ -107,15 +126,15 @@ class VMProxy{
  * vmp.props.abc = 'abc';
  * </code>
  */
-function watchVM(vm,combinePropKeys=false){
-  if(!vm){
+function getProxy(principal,combinePropKeys=false){
+  if(!principal){
     return;
   }
   let id = util.getSysId();
-  let vmo = new VMOption(vm,id);
+  let vmo = new VMOption(principal,id);
   vmoList[vmo[VMO_ID]] = vmo;
   const vmp = new VMProxy(id);
-  if(combinePropKeys){
+  if(principal && combinePropKeys){
     combinePropToVMP(vm.data,vmp);
   }
   return vmp;
@@ -228,5 +247,6 @@ function combinePropToVMP(props,vmp){
 //============================================
 module.exports = {
   watchVM,
+  VMO_ID,
 };
 

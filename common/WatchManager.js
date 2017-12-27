@@ -134,6 +134,8 @@ const exportObj = {
   get store(){
     return _store;
   },
+  watcherify(vm,list){},
+  addWatchers(){},
   /**
    * 获得一个watcher单例
    */
