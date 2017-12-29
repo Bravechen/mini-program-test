@@ -3,7 +3,6 @@
  * @auhtor Brave Chan on 2017
  */
 //===================================================================
-const ConstUtil = require('./ConstUtil');
 /**
  * @public
 * 格式化时间

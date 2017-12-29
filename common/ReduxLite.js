@@ -33,7 +33,7 @@ class Store{
    * @public
    * 返回store中的state对象或state树
    */
-  get state(){
+  getState(){
     return _state;
   }
   /**
@@ -98,6 +98,7 @@ function combineReducers(reducers){
     return;
   }
   let keys = Object.keys(reducers);
+  console.log("@@@@@@@@@>>>",reducers);
   return function(state,action){
     if(!state || !action){
       return state;
@@ -112,6 +113,7 @@ function combineReducers(reducers){
         obj[key] = fn(state[key],action);        
       }
     }
+    console.log("#######>>>",obj);
     return obj;
 
   };

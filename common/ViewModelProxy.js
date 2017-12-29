@@ -3,7 +3,7 @@ import WM from './WatchManager';
 //===================================================
 let renderList = {};
 let vmList = {};
-const VMO_ID = 'vmo_id';
+const VMO_ID = 'vmo_id$';
 let renderTimer = null;
 const RENDER_TIME = 100;
 
@@ -55,8 +55,6 @@ class VM{
     this.optData = null;
     this[VMO_ID] = null;
     this.principal = null;
-    //only for debug
-    // this.validateTime = null;
   }
 }
 //================================================
@@ -65,9 +63,10 @@ class VMProxy{
     this[VMO_ID] = id;
   }
   /**
-   * 
-   * @param {*} prop 
-   * @param {*} value 
+   * @public
+   * 提交属性修改
+   * @param {String} prop [necessary] 属性名 
+   * @param {*} value [necessary] 属性值 
    */
   commit(prop,value){
     if(typeof prop === 'string'){
@@ -79,14 +78,20 @@ class VMProxy{
     return this;
   }
   /**
-   * 
+   * @public
+   * 让设置立即生效
+   * 即，立即调用`this.setData()`，让设置生效
+   * 次方法应用在需要立即让配置生效的场景，
+   * 这会造成将当前缓存的属性修改配置立即提交wx处理。
+   * 因此从性能考虑，此方法最好只用在确实必要之时。
    */
   validateNow(){
     validateNow(this[VMO_ID]);
     return this;
   }
   /**
-   * 销毁vmp
+   * @public
+   * 销毁vmp和vm
    */
   destory(){
     if(this.props){
@@ -98,100 +103,67 @@ class VMProxy{
     }    
     destoryVMO(this[VMO_ID]);  
   }
-  /**
-   * 监控哪些属性的改变
-   * @param {*} list 
-   */
-  watch(list){
-
-  }
-  /**
-   * 解除对属性的监控
-   * @param {*} args 
-   */
-  unwatch(...args){
-
-  }
 }
 //===============================================
 /**
- * 将一个vm加入监视行列
- * @param {*} vm 
- * @param {Boolean} combinePropKeys [optional] 是否将vm.data上的属性名合并到vmp实例上
- * 每个属性名的值对应于该属性名的键名字符串:
- * <code>
- * 
- * vm.data.abc = '123';
- * vmp.props.abc = 'abc';
- * </code>
- */
-function getProxy(principal,combinePropKeys=false){
-  if(!principal){
-    return;
-  }
-  let id = util.getSysId();
-  let vmo = new VMOption(principal,id);
-  vmoList[vmo[VMO_ID]] = vmo;
-  const vmp = new VMProxy(id);
-  if(principal && combinePropKeys){
-    combinePropToVMP(vm.data,vmp);
-  }
-  return vmp;
-}
-/**
+ * @private
  * 数据立即生效
- * @param {*} id 
+ * @param {String} id [necessary] vm的id 
  */
 function validateNow(id){
-  let vmo = vmoList[id];
-  if(!vmo){
+  let vm = vmList[id];
+  if(!vm){
     return;
   }
 
-  if(renderList[vmo[VMO_ID]]){
-    renderList[vmo[VMO_ID]] = false;
+  if(renderList[vm[VMO_ID]]){
+    renderList[vm[VMO_ID]] = false;
   }
-  vmo.validate();
+  vm.validate();
 }
 /**
+ * @private
  * 提交数据变动
- * @param {*} id 
- * @param {*} propName 
- * @param {*} value 
+ * @param {String} id [necessary] vm的id 
+ * @param {String} propName [necessary] 属性名
+ * @param {*} value [necessary] 新的属性值
  */
 function commitProperty(id,propName,value){
-  let vmo = vmoList[id];
-  return vmo?vmo.commit(propName,value):null;
+  let vm = vmList[id];
+  return vm?vm.commit(propName,value):null;
 }
 /**
+ * @private
  * 批量提交数据变动
- * @param {*} id 
- * @param {*} opt 
+ * @param {String} id [necessary] vm的id
+ * @param {Object} opt [necessary] 修改属性的集合
  */
 function commitProperties(id,opt){
-  let vmo = vmoList[id];
+  let vm = vmList[id];
   let keys = Object.keys(opt);
   for(let value of keys){
-    vmo.commit(value,opt[value]);
+    vm.commit(value,opt[value]);
   }  
 }
 /**
- * 销毁一个VMOption实例
- * @param {*} id 
+ * @private
+ * 销毁一个VM实例
+ * @param {String} id [necessary] vm的id
  */
-function destoryVMO(id){
-  let vmo = vmoList[id];
-  return vmo?vmo.destory():null;
+function destoryVM(id){
+  let vm = vmList[id];
+  return vm?vm.destory():null;
 }
 
 //only for debug
-function outputVMOS(){
-  return vmoList;
+function _outputVMOS(){
+  return vmList;
 }
 
 //======================================================
 /**
- * 添加一个vmo到待执行列表
+ * @private
+ * 添加一个vm到待执行列表
  * @param {*} id 
  */
 function addRender(id){
@@ -204,24 +176,26 @@ function addRender(id){
   }
 }
 /**
+ * @private
  * 启动生效工作
  */
 function setupRender(){
   renderTimer = setTimeout(validateProperties,RENDER_TIME);
 }
 /**
+ * @private
  * 数据生效
  */
 function validateProperties(){
   clearTimeout(renderTimer);
   renderTimer = null;
 
-  let vmo,
+  let vm,
       keys = Object.keys(renderList);
   for(let value of keys){
-    vmo = vmoList[value];
-    if(vmo && renderList[value]){
-      vmo.validate();
+    vm = vmList[value];
+    if(vm && renderList[value]){
+      vm.validate();
     }    
   }
   renderList = {};
@@ -232,20 +206,33 @@ function validateProperties(){
  * @param {*} props 
  * @param {*} vmp 
  */
-function combinePropToVMP(props,vmp){
-  if(!props || !vmp){
-    return;
-  }
-  const keys = Object.keys(props);
-  vmp.props = {};
-  for(let value of keys){
-    vmp.props[value] = value;
-  }
+// function combinePropToVMP(props,vmp){
+//   if(!props || !vmp){
+//     return;
+//   }
+//   const keys = Object.keys(props);
+//   vmp.props = {};
+//   for(let value of keys){
+//     vmp.props[value] = value;
+//   }
+// }
+//===================================================
+/**
+ * @public
+ * 创建vm对象和vmp代理对象
+ * @param {*} principal 
+ */
+function create(principal){
+  let id = util.getSysId();
+  let vm = new VM(principal,id);
+  vmList[vm[VMO_ID]] = vm;
+  let vmp = new VMProxy(id);
+  return vmp;  
 }
 
 //============================================
 module.exports = {
-  watchVM,
+  create,
   VMO_ID,
 };
 
