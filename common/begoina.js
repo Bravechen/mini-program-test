@@ -8,13 +8,13 @@ let decorators = [];
  * @public
  * 获得一个小程序页面或组件实例的代理
  * @param {Object} principal [necessary] 小程序页面或者组件的实例
+ * 
  * 以下参数待定
  * @param {Boolean} combinePropKeys [optional] 是否将vm.data上的属性名合并到vmp实例上
  * 每个属性名的值对应于该属性名的键名字符串:
  * <code>
- * 
- * vm.data.abc = '123';
- * vmp.props.abc = 'abc';
+ *  vm.data.abc = '123';
+ *  vmp.props.abc = 'abc';
  * </code>
  */
 function getProxy(principal){
@@ -28,6 +28,7 @@ function getProxy(principal){
 }
 /**
  * @public
+ * 
  * 增加程序运行中需要使用的增强模块
  * @param {*} addModule [necessary] 增强模块 
  */
@@ -50,6 +51,7 @@ function use(addModule){
 //=========================================
 /**
  * @private
+ * 
  * 是否在列表中存在
  * @param {Array} array [necessary] 
  * @param {*} obj [necessary] 
@@ -60,6 +62,7 @@ function isExisting(array,obj){
 
 /**
  * @private
+ * 
  * 添加装饰器
  * @param {Function} fn [necessary] 装饰器函数
  * @param {Array} list [necessary] 装饰器列表 
@@ -73,12 +76,13 @@ function addDecorator(fn,list){
 
 /**
  * @private
+ * 
  * 执行装饰操作
- * @param {VMP.VMProxy} vmp [necessary]
- * @param {Array} list [necessary]
+ * @param {VMP.VMProxy} vmp [necessary] vmp实例
+ * @param {Array} list [necessary] 装饰器列表
  */
 function doDecorate(vmp,list){
-    if(list.length<=0){
+    if(list.length<=0 || !vmp){
         return;
     }
     let len = list.length;

@@ -2,7 +2,7 @@ const GET_GROUPLIST = 'getGroupList';
 
 module.exports = {
     state:{
-        groupList:[],
+        groupList:['1885'],
     },
     getters:{
         groupList:state => state.groupList,
