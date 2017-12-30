@@ -7,10 +7,17 @@ module.exports = {
     getters:{
         subjectList:state => state.subjectList,
     },
-    actions:{},
+    actions:{
+        getSubjectList(store,groupId){
+            store.dispatch({
+                type:GET_SUBJECTS,
+                payload:groupId,
+            });
+        }
+    },
     reducers:{
         [GET_SUBJECTS](state,action){
-            cosole.log('In subject==========>state',state,action);
+            console.log('In subject==========>state',state,action);
             return state;
         }
     },

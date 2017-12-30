@@ -15,7 +15,10 @@ Page({
 
   onLoad: function () {
     this.vmp = BE.getProxy(this);
-    console.log(this.vmp,this.vmp.$store);
+    console.log(this.vmp,this.vmp.$store,this.vmp.$store.getState());
+    console.log("groupList=====>>",this.vmp.$getters.groupList);
+    this.vmp.$actions.getGroupList('10');
+    this.vmp.$actions.getSubjectList('1885');
   },
   //事件处理函数
   bindViewTap: function() {

@@ -118,27 +118,11 @@ function combineReducers(reducers){
 
   };
 }
-/**
- * @public
- * 生成一个用来创建action的函数
- * @param type {Symbol/String}
- */
-function createAction(type){
-  
-  return function(data){
-
-    return {
-      type:type,
-      data:data
-    };
-  }
-}
 
 //==================================================
 module.exports = {
   createStore,
   combineReducers,
-  createAction,
 };
 
 

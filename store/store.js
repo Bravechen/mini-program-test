@@ -11,4 +11,5 @@ let store = bex.createStore({
         group,
         subject,
     },
+    debug:true,
 });

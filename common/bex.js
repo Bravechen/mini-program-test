@@ -3,6 +3,8 @@ import WM from './WatchManager';
 //===================================================
 let _store;
 let _getters;
+let _actions;
+let debug = true;
 //===================================================
 /**
  * @public
@@ -14,16 +16,31 @@ function createStore(opt){
     if(_store){
         return _store;
     }
-    let [allReducers,getters] = handleModules({},{},opt.modules);
+    debug = opt.debug;
+    let [allReducers,getters,actions] = handleModules({},{},{},opt.modules);
+    _actions = actions;
     let state = opt.state || {};
     let reducer = Redux.combineReducers(allReducers);
     _store = new Redux.createStore(reducer,state);
     
     _store.dispatch({});//考虑一下
-    console.log("============>>>",_store,_store.getState());
+    // console.log("============>>>",_store,_store.getState());
     _getters = getters;
+    
     return _store;
 }
+
+function mapActions(list){
+
+    return [];
+}
+
+// function mapGetters(list){
+
+//     return [];
+// }
+
+//=========================================================
 /**
  * @public
  * 
@@ -58,9 +75,10 @@ function unwatch(prop){
 function createReducer(_state={},reducers){
 
     return function(state=_state,action){
+
         let fn = reducers[action.type];
         if(typeof fn === 'function'){
-            return Object.assign({},state,fn.call(null,state,action.data));
+            return Object.assign({},state,fn.call(null,state,action) || state);
         }
 
         return state;
@@ -97,15 +115,30 @@ function createGetters(backGetters={},branch,getters){
 
 /**
  * @private
+ * 创建actions的函数
+ * 此actions函数仅是由模块文件中actions字段产生的函数包装函数。
+ * 并不是redux中的action
+ */
+function createAction(fn){
+    
+    return function(action){
+      let list = [_store,action];
+      fn.apply(this,list);        
+    }
+}
+
+/**
+ * @private
  * 
  * 处理模块数据
  * @param {Object} allReducers [necessary] 最后导出的包含所有分支reducer的对象 
  * @param {Object} getters [necessary] 最后导出的包含所有分支的get函数的对象
+ * @param {Object} actions [necessary] 最后导出的包含所有actions函数的集合
  * @param {Object} modules [necessary] 模块对象
  * 
  * @return {Array} [allReducers,getters] 
  */
-function handleModules(allReducers,getters,modules){
+function handleModules(allReducers,getters,actions,modules){
     if(!modules){
         return allReducers;
     }
@@ -124,17 +157,18 @@ function handleModules(allReducers,getters,modules){
         }
         allReducers[value] = createReducer(state,reducers);
         handleGetters(getters,value,m.getters);
+        handleActions(actions,m.actions);
     }
-    return [allReducers,getters];
+    return [allReducers,getters,actions];
 }
 
 /**
  * @private
  * 
  * 处理get函数集合
- * @param {Object} getters 给加工并最后导出的get函数集合对象
- * @param {String} branch 分支名称
- * @param {Object} branchGetters 分支的get函数集合 
+ * @param {Object} getters [neccessary] 加工并最后导出的get函数集合对象
+ * @param {String} branch [neccessary] 分支名称
+ * @param {Object} branchGetters [neccessary] 分支的get函数集合 
  */
 function handleGetters(getters,branch,branchGetters){
     if(!branchGetters){
@@ -142,6 +176,27 @@ function handleGetters(getters,branch,branchGetters){
     }
     createGetters(getters,branch,branchGetters)();
     // console.log("@@@===========>>>",branch,getters);
+}
+
+/**
+ * @private
+ * 
+ * 处理action函数集合
+ * @param {Object} actions [neccessary] 加工并最后导出的actions函数集合
+ * @param {Object} branchActions [neccessary] 模块中的actions函数集合 
+ */
+function handleActions(actions,branchActions){
+    if(!branchActions){
+        return;
+    }
+    let keys = Object.keys(branchActions);
+    if(keys.length<=0){
+        return;
+    }
+
+    for(let value of keys){
+        actions[value] = createAction(branchActions[value]);
+    }
 }
 
 //=======================================================
@@ -161,6 +216,13 @@ export default {
         return _getters;
     },
     /**
+     * @public
+     * 可以通过actions访问state上的属性
+     */
+    get actions(){
+        return _actions;
+    },
+    /**
      * @internal
      * 包装器，用于为VMP实例添加功能
      * @param {Object} vmp VMP的实例,
@@ -168,23 +230,39 @@ export default {
      * 所以不必再重复验证。
      */
     decorator(vmp){
-        Object.defineProperty(vmp,'$store',{
-            get(){
-                return _store;
-            }
+        Object.defineProperties(vmp,{
+            '$store':{
+                get(){
+                    return _store;
+                }
+            },
+            '$getters':{
+                get(){
+                    return _getters;
+                }
+            },
+            '$actions':{
+                get(){
+                    return _actions;
+                }
+            },      
         });
 
         if(typeof vmp.watch === 'undefined'){
             vmp.watch = watch;
         }else{
-            console.error("In bex,when do decorate vmp,there is same key of watch in vmp already,please check.");
+            if(debug){
+                console.error("In bex,when do decorate vmp,there is same key of watch in vmp already,please check.");
+            }            
             return;
         }
 
         if(typeof vmp.unwatch === 'undefined'){
             vmp.unwatch = unwatch;
         }else{
-            console.error("In bex,when do decorate vmp,there is same key of unwatch in vmp already,please check.");
+            if(debug){
+                console.error("In bex,when do decorate vmp,there is same key of unwatch in vmp already,please check.");
+            }            
             return;
         }
         
