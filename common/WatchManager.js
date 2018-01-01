@@ -1,14 +1,37 @@
 const util = require('../utils/util');
-let _store;
+
 let watchList = {};
-const origin = {};
+
 const cbList = {};
 const WM_ID = 'wm_id';
 const WM_SCOPE = 'wm_scope';
 let subscribed = false;
 let watcher;
-let getter;
+
+const origin = {};
+/*
+  {
+    vm_id:vmp
+  }
+*/
+let vmList = {};
+/*
+  {
+    propName:[watcher1,watcher2,...],
+  }
+
+ */
+let watcherList = {};
+let _store;
+let _getters;
 //===========================================
+class Watcher{
+  constructor(){
+    this.vmp_id = '';   //用于调取vmp，然后应用属性值
+    this.update = null; //fn，用于在最后提交到vmp进行处理前，进行更新的回调。this值，应该页面或组件的this
+  }
+}
+
 class WatchProxy{
   constructor(){
   }
@@ -17,11 +40,11 @@ class WatchProxy{
    * @param {*} propName 
    * @param {*} handler 
    */
-  watch(propName,handler,scope=null){
-    if(typeof propName !== 'string' || typeof handler !== 'function'){
+  watch(vmp,propName){
+    if(typeof propName !== 'string' || !vmp){
       return;
     }
-    let list = watchList[propName];
+    let list = watcherList[propName];
     if(!list){
       list = [];
       watchList[propName] = list;
@@ -52,27 +75,7 @@ class WatchProxy{
    * @param {*} handler 
    */
   unwatch(propName,handler){
-    if(typeof propName !== 'string' || typeof handler !== 'function'){
-      return;
-    }
-    const list = watchList[propName];
-    if(!list || typeof handler[WM_ID] !== 'string'){
-      return;
-    }
-    const id = handler[WM_ID];
-    const index = list.indexOf(id);
-    if(index>=0){
-      list.splice(index,1);
-      delete handler[WM_ID];
-      delete handler[WM_SCOPE];
-      delete cbList[id];
-    }else{
-      return;
-    }
-    if(list && list.length<=0){
-      delete watchList[propName];
-      delete origin[propName];
-    }
+    
   }
 
   /**
@@ -81,27 +84,16 @@ class WatchProxy{
    * @param {*} handler 
    */
   hasWatched(propName,handler){
-    if(typeof propName !== 'string' || typeof handler !== 'function' || typeof handler[WM_ID] !== 'string'){
-      return false;
-    }
-    const list = watchList[propName];
-    if(!list){
-      return false;
-    }
-    return list.indexOf(handler[WM_ID])>=0;
+    
   }
 }
 //===========================================
 function subscribeState(){
-  if(subscribed){
-    return;
-  }
-  subscribed = true;
   _store.subscribe(stateUpdateHandler);
 }
 
 function stateUpdateHandler(){
-  const state = _store.state;
+  const state = _store.getState();
 
   // console.info("Now,the state refreshed=====>");
   // console.dir(state);
@@ -165,5 +157,36 @@ const exportObj = {
     // console.log("wm init================>",this,getter);
   }
 };
+let initialized = false;
 //===========================================
-  module.exports = exportObj;
+export default {
+  setup(store,getters){
+    console.warn("===========>>>",store,getters);
+    if(initialized){
+      return;
+    }
+    _store = store;
+    _getters = getters;
+    initialized = true;
+  },
+  watcherify(vm,list){
+
+  },  
+  addWatchers(watchers){
+    if(!initialized){
+      console.warn("WatchManager is not be initialized.");
+      return false;
+    }
+    let len = watchers.length;
+    let watcher,prop,list;
+    while(len--){
+      watcher = watchers[len];
+      list = watcherList[prop];
+      if(!list){
+        watcherList[prop] = list;
+        origin[prop] = _getters[prop];
+      }
+      list[length] = watcher;
+    }
+  },
+};

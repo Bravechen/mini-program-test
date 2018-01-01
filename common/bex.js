@@ -26,6 +26,7 @@ function createStore(opt){
     _store.dispatch({});//考虑一下
     // console.log("============>>>",_store,_store.getState());
     _getters = getters;
+    WM.setup(_store,_getters);
     
     return _store;
 }
@@ -109,8 +110,10 @@ function createGetters(backGetters={},branch,getters){
                 }
             };
         }
+        // backGetters[branch] = {};
+        // Object.defineProperties(backGetters[branch],props);
         Object.defineProperties(backGetters,props);
-    }    
+    }
 }
 
 /**
@@ -157,7 +160,7 @@ function handleModules(allReducers,getters,actions,modules){
         }
         allReducers[value] = createReducer(state,reducers);
         handleGetters(getters,value,m.getters);
-        handleActions(actions,m.actions);
+        handleActions(actions,value,m.actions);
     }
     return [allReducers,getters,actions];
 }
@@ -185,7 +188,7 @@ function handleGetters(getters,branch,branchGetters){
  * @param {Object} actions [neccessary] 加工并最后导出的actions函数集合
  * @param {Object} branchActions [neccessary] 模块中的actions函数集合 
  */
-function handleActions(actions,branchActions){
+function handleActions(actions,branch,branchActions){
     if(!branchActions){
         return;
     }
@@ -193,8 +196,9 @@ function handleActions(actions,branchActions){
     if(keys.length<=0){
         return;
     }
-
+    // actions[branch] = {};
     for(let value of keys){
+        // actions[branch][value] = createAction(branchActions[value]);
         actions[value] = createAction(branchActions[value]);
     }
 }
