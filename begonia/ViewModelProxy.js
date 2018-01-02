@@ -1,4 +1,17 @@
-let util = require('./util');
+/**
+ * VM更新及VM代理
+ * 
+ * vm是附加在小程序页面和组件上的对象
+ * 它可以通过延迟执行`setData()`进行优化
+ * 
+ * 同时提供一个代理对象包装ViewModleProxy(vmp)
+ * 用于使用套件中提供其他增强功能
+ * 
+ * @version 0.2.0
+ * @author Brave Chan on 2017.12 
+ */
+//===================================================
+import util from require('./util');
 import WM from './WatchManager';
 //===================================================
 let renderList = {};

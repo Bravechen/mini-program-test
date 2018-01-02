@@ -1,10 +1,11 @@
 /**
  * 观察者管理
+ * @version 0.2.0
  * @author Brave Chan on 2017.12
  */
 //===========================================================
-const util = require('./util');
-const be_const = require('./beconst');
+import util from './util';
+import be_const from './beconst';
 //============================================================
 let _debug = false;
 //监控state属性引用和值集合
@@ -28,13 +29,14 @@ let updateList = [];
 
 let _store;
 let _getters;
+let unsubscribeStateUpadte;
 //===========================================
 /**
  * @private
  * 订阅state树变动
  */
 function subscribeState(){
-  _store.subscribe(stateUpdateHandler);
+  unsubscribeStateUpadte = _store.subscribe(stateUpdateHandler);
 }
 
 /**
@@ -238,6 +240,44 @@ module.exports = {
   /**
    * @public
    * 
+   * 移除观察者
+   * @param {Object} vmp [necessary] 移除对vmp提交的属性监控 
+   * @param {String} propName [necessary] 属性名称
+   */
+  removeWatcher(vmp,propName){
+    if(vmpList.length>0){
+      vmpList = vmpList.filter(function(item,index){
+        return item === vmp[be_const.VM_ID];
+      });
+    }
+
+    let list = watcherList[propName];
+    if(list && list.length>0){
+      list = list.filter(function(item,index){
+        return item[be_const.VM_ID] === vmp[be_const.VM_ID];
+      });
+    }
+  },
+  /**
+   * @public
+   * 
+   * 移除所有和此vmp实例有关的观察者
+   * @param {ViewModleProxy} vmp 
+   */
+  removeAllByVMP(vmp){
+    const VM_ID = be_const.VM_ID;
+    if(!vmp || !vmpList[vmp[VM_ID]]){
+      return;
+    }
+    let keys = Object.keys(watcherList);
+    let len = keys.length;
+    while(len--){
+      this.removeWatcher(vmp,keys[len]);
+    }
+  },
+  /**
+   * @public
+   * 
    * 提交属性变动
    * 当state树发生变化，将发生变化的属性键名提交
    * wm会组成变化集合数组，然后逐一更新观察者们
@@ -254,4 +294,21 @@ module.exports = {
     }
     updateList[updateList.length] = propName;
   },
+  /**
+   * WM进行销毁操作
+   * 销毁不同于重置，
+   * 是达到完全解除引用，完全不能再用的状态。
+   */
+  destroy(){
+    //解除对state树的订阅
+    unsubscribeStateUpadte();
+    //去除相关属性引用
+    _store = null;
+    _getters = null;
+    origin = null;
+    vmpList = null;
+    watcherList = null;
+    updateList = null;
+    initialized = false;
+  }
 };

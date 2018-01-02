@@ -2,6 +2,7 @@
  * begoina redux-lite (bex)
  * 
  * 提供bex的入口和基本功能
+ * @version 0.2.0
  * @author Brave Chan on 2017.12
  */
 //===================================================
@@ -39,11 +40,34 @@ function createStore(opt){
     return _store;
 }
 
+/**
+ * @public
+ * 
+ * 将需要的action析出
+ * 
+ * @param {Array} list [necessary] 需要的action函数名称集合
+ * @return {Array} 
+ */
 function mapActions(list){
+    if(!list || list.length<=0){
+        return [];
+    }
+    let back = [];
+    let len = list.length;
+    let fn;
+    while(len--){
+        fn = _actions[list[len]];
+        if(typeof fn === 'function'){
+            back[len] = fn;
+        }else{
+            console.error('The name in list who is param,is error====>index:',len,'function name:',list[len]);
+        }
+    }
 
-    return [];
+    return back;
 }
 
+// 暂不提供
 // function mapGetters(list){
 //     return [];
 // }
@@ -70,7 +94,9 @@ function watch(list){
  * @param {*} prop 
  */
 function unwatch(prop){
-
+    if(typeof prop === 'string'){
+        WM.removeWatcher(this,prop);
+    }
 }
 //=======================================================
 /**
@@ -321,20 +347,25 @@ export default {
      * 由begoina主动调用
      * 不用手动调用
      */
-    setup(){
-        
-    },
+    setup(){},
     /**
      * @internal
      * 清除绑定在vmp上的
      * 装饰器或者属性
      */
-    clearVMP(vmp){},
+    clearVMP(vmp){
+        WM.removeAllByVMP(vmp);
+    },
     /**
      * @internal
      * 进行销毁bex的操作
      */
-    destroy(){},
+    destroy(){
+        WM.destroy();
+        _store = null;
+        _getters = null;
+        _actions = null;
+    },
     //=========================================================== 
     /**
      * @public
@@ -343,6 +374,17 @@ export default {
      * 如果下次再调用该方法，仍然会返回上一次创建的实例。
      * 
      * @param {Object} opt [necessary] store的配置对象
+     * 
+     * @return {Object}
      */
     createStore,
+    /**
+     * @public
+     * 
+     * 将需要的action析出
+     * 
+     * @param {Array} list [necessary] 需要的action函数名称集合
+     * @return {Array} 
+     */
+    mapActions,
 };

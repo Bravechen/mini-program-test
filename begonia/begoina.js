@@ -1,8 +1,10 @@
 /**
  * begoina的入口文件
  * 提供基本的方法
+ * @version 0.2.0
  * 
  * @author Brave Chan on 2017.12
+ * 
  */
 //======================================================
 import VMP from './ViewModelProxy';
@@ -10,6 +12,7 @@ import util from './util';
 //=======================================================
 const M_ID = 'be_m_id$';
 let decorators = [];
+let moduleList = [];
 //=======================================================
 /**
  * @public
@@ -46,6 +49,10 @@ function use(addModule){
     }
     let id = util.getSysId();
 
+    if(moduleList.indexOf(am)===-1){
+        moduleList[moduleList.length] = am;
+    }
+
     if(typeof am.decorator === 'function'){
         addDecorator(am.decorator,decorators);
     }
@@ -53,6 +60,25 @@ function use(addModule){
     if(typeof am.setup === 'function'){
         am.setup();
     }
+}
+/**
+ * @public
+ * 
+ * 销毁vmp实例
+ * 此方法为一个包装方法，
+ * 会逐一按照装在的增强模块的顺序，
+ * 调用模块开放的`clearVMP(vmp)`接口。
+ * 最后调用vmp实例本身的`destroy()`方法。
+ * vmp实例完成销毁，可以将变量或属性标记为`null`，
+ * 以备gc回收
+ * 
+ */
+function destroyVMP(){
+    let len = moduleList.length;
+    while(len--){
+        moduleList[len].clearVMP(this);
+    }
+    this._destroy();
 }
 
 //=========================================
@@ -95,6 +121,12 @@ function doDecorate(vmp,list){
     let len = list.length;
     while(len--){
         list[len](vmp);
+
+        //将vmp本身的destory方法赋予别名
+        //然后使用提供的包装函数包装
+        //以备进行更完整的清理
+        vmp._destroy = vmp.destroy;
+        vmp.destroy = destroyVMP;
     }
 }
 
