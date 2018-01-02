@@ -1,8 +1,7 @@
 //index.js
 //获取应用实例
-const app = getApp()
-import BE from '../../common/begoina';
-
+const app = getApp();
+import BE from '../../begonia/begoina';
 
 Page({
   data: {

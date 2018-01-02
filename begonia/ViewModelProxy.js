@@ -18,7 +18,8 @@ let renderList = {};
 let vmList = {};
 const VMO_ID = 'vmo_id$';
 let renderTimer = null;
-const RENDER_TIME = 100;
+let _interval = 100;
+let _debug = false;
 
 //===============================================
 /**
@@ -204,7 +205,7 @@ function addRender(id){
  * 启动生效工作
  */
 function setupRender(){
-  renderTimer = setTimeout(validateProperties,RENDER_TIME);
+  renderTimer = setTimeout(validateProperties,_interval);
 }
 /**
  * @private
@@ -256,6 +257,29 @@ function create(principal){
 
 //============================================
 module.exports = {
+  set debug(value){
+    _debug = value;
+  },
+  get debug(){
+    return _debug;
+  },
+  set interval(value){
+    if(!Number.isInteger(value)){
+      if(_debug){
+        console.error("In VMP set interval(),the value is not integer number.====>",value);
+      }
+      return;
+    }
+    if(value === 0){
+      if(_debug){
+        console.warn("In VMP set interval(),if you need set interval to 0,you can use vmp.validateNow() method,which is much better.");
+      }
+      return;
+    }
+  },
+  get interval(){
+    return _interval; 
+  },
   create,
   VMO_ID,
 };
