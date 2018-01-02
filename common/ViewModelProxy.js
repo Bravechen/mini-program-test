@@ -63,6 +63,17 @@ class VMProxy{
     this[VMO_ID] = id;
   }
   /**
+   * @internal
+   * 
+   * 获取代理的vm实例
+   * 此方法有可能被废弃，
+   * 并且在内部使用，
+   * 请不要主动调用它。
+   */
+  get _vm(){
+    return vmList[this[VMO_ID]];
+  }
+  /**
    * @public
    * 提交属性修改
    * @param {String} prop [necessary] 属性名 

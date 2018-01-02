@@ -1,3 +1,10 @@
+/**
+ * begoina redux-lite (bex)
+ * 
+ * 提供bex的入口和基本功能
+ * @author Brave Chan on 2017.12
+ */
+//===================================================
 import Redux from './ReduxLite';
 import WM from './WatchManager';
 //===================================================
@@ -17,15 +24,16 @@ function createStore(opt){
         return _store;
     }
     debug = opt.debug;
-    let [allReducers,getters,actions] = handleModules({},{},{},opt.modules);
+    let [allReducers,getters,actions] = handleModules({},{},{},opt.modules,stateChanged);
     _actions = actions;
     let state = opt.state || {};
     let reducer = Redux.combineReducers(allReducers);
     _store = new Redux.createStore(reducer,state);
     
     _store.dispatch({});//考虑一下
-    // console.log("============>>>",_store,_store.getState());
     _getters = getters;
+
+    WM.debug = debug;
     WM.setup(_store,_getters);
     
     return _store;
@@ -37,7 +45,6 @@ function mapActions(list){
 }
 
 // function mapGetters(list){
-
 //     return [];
 // }
 
@@ -50,7 +57,10 @@ function mapActions(list){
  * @param {Array} list 
  */
 function watch(list){
-
+    if(list && list.length>0){
+        list = WM.watcherify(this,list);
+        WM.addWatchers(...list);
+    }
 }
 /**
  * @public
@@ -73,15 +83,35 @@ function unwatch(prop){
  * 
  * @return {Function} reducer函数 
  */
-function createReducer(_state={},reducers){
+function createReducer(_state={},reducers,cb){
 
     return function(state=_state,action){
 
+        let proxy = {};
+        let props = {};
+        let keys = Object.keys(state);
+        for(let key of keys){
+            props[key] = {
+                set(value){
+                    if(value === state[key]){
+                        return;
+                    }
+                    state = Object.assign({},state,{[key]:value});
+                    console.log("==%%%%==========>>",state[key],state);
+                    cb(key);
+                },
+                get(){
+                    return state[key];
+                }
+            };
+        }
+        Object.defineProperties(proxy,props);
+
         let fn = reducers[action.type];
         if(typeof fn === 'function'){
-            return Object.assign({},state,fn.call(null,state,action) || state);
+            fn.call(null,proxy,action);
         }
-
+        
         return state;
     }
 }
@@ -141,7 +171,7 @@ function createAction(fn){
  * 
  * @return {Array} [allReducers,getters] 
  */
-function handleModules(allReducers,getters,actions,modules){
+function handleModules(allReducers,getters,actions,modules,changeCB){
     if(!modules){
         return allReducers;
     }
@@ -158,7 +188,7 @@ function handleModules(allReducers,getters,actions,modules){
         if(!state || !reducers){
             continue;
         }
-        allReducers[value] = createReducer(state,reducers);
+        allReducers[value] = createReducer(state,reducers,changeCB);
         handleGetters(getters,value,m.getters);
         handleActions(actions,value,m.actions);
     }
@@ -203,6 +233,19 @@ function handleActions(actions,branch,branchActions){
     }
 }
 
+/**
+ * @private
+ * 
+ * state分支属性变化回调
+ * @param {String} key [necessary] 变化的分支属性键名 
+ */
+function stateChanged(key){
+    if(debug){
+        console.warn("The state has changed====>props:",key);
+    }    
+    WM.commit(key);
+}
+
 //=======================================================
 export default {
     /**
@@ -226,6 +269,7 @@ export default {
     get actions(){
         return _actions;
     },
+    //=========================================================== 
     /**
      * @internal
      * 包装器，用于为VMP实例添加功能
@@ -280,6 +324,18 @@ export default {
     setup(){
         
     },
+    /**
+     * @internal
+     * 清除绑定在vmp上的
+     * 装饰器或者属性
+     */
+    clearVMP(vmp){},
+    /**
+     * @internal
+     * 进行销毁bex的操作
+     */
+    destroy(){},
+    //=========================================================== 
     /**
      * @public
      * 创建一个store实例

@@ -18,7 +18,7 @@ module.exports = {
     reducers:{
         [GET_SUBJECTS](state,action){
             console.log('In subject==========>state',state,action);
-            return state;
+            state.subjectList = [{id:'chinese',name:'语文',className:''}];
         }
     },
 };

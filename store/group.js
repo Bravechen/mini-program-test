@@ -21,9 +21,7 @@ module.exports = {
     reducers:{
         [GET_GROUPLIST]:function(state,action){
             console.log('In group==========>state',state,action);
-            // state = Object.assign({},state,{groupList:['1885','1886']});
             state.groupList = ['1885','1886'];
-            return state;
         }
     },
 };

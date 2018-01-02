@@ -1,192 +1,257 @@
-const util = require('../utils/util');
-
-let watchList = {};
-
-const cbList = {};
-const WM_ID = 'wm_id';
-const WM_SCOPE = 'wm_scope';
-let subscribed = false;
-let watcher;
-
+/**
+ * 观察者管理
+ * @author Brave Chan on 2017.12
+ */
+//===========================================================
+const util = require('./util');
+const be_const = require('./beconst');
+//============================================================
+let _debug = false;
+//监控state属性引用和值集合
 const origin = {};
 /*
   {
     vm_id:vmp
   }
 */
-let vmList = {};
+//代理集合
+let vmpList = {};
 /*
   {
     propName:[watcher1,watcher2,...],
   }
-
  */
+//属性观察者集合
 let watcherList = {};
+//当前需要进行更新的属性
+let updateList = [];
+
 let _store;
 let _getters;
 //===========================================
-class Watcher{
-  constructor(){
-    this.vmp_id = '';   //用于调取vmp，然后应用属性值
-    this.update = null; //fn，用于在最后提交到vmp进行处理前，进行更新的回调。this值，应该页面或组件的this
-  }
-}
-
-class WatchProxy{
-  constructor(){
-  }
-  /**
-   * 观察一个属性
-   * @param {*} propName 
-   * @param {*} handler 
-   */
-  watch(vmp,propName){
-    if(typeof propName !== 'string' || !vmp){
-      return;
-    }
-    let list = watcherList[propName];
-    if(!list){
-      list = [];
-      watchList[propName] = list;
-      origin[propName] = getter[propName];
-    }
-
-    //为回调函数加个id
-    if(typeof handler[WM_ID]!=='string'){
-      handler[WM_ID] = util.getSysId();
-      handler[WM_SCOPE] = scope;
-    }
-    const id = handler[WM_ID];
-    const index = list.indexOf(id);       
-    
-    if(index === -1){
-      cbList[id] = handler;
-      list[list.length] = id;
-    }else{
-      return;
-    }
-    if(!subscribed){
-      subscribeState();
-    }
-  }
-  /**
-   * 解除对属性的一个观察
-   * @param {*} propName 
-   * @param {*} handler 
-   */
-  unwatch(propName,handler){
-    
-  }
-
-  /**
-   * 是否已在观察之列
-   * @param {*} propName 
-   * @param {*} handler 
-   */
-  hasWatched(propName,handler){
-    
-  }
-}
-//===========================================
+/**
+ * @private
+ * 订阅state树变动
+ */
 function subscribeState(){
   _store.subscribe(stateUpdateHandler);
 }
 
-function stateUpdateHandler(){
-  const state = _store.getState();
+/**
+ * @private
+ * state更新处理器
+ */
+function stateUpdateHandler(){  
 
-  // console.info("Now,the state refreshed=====>");
-  // console.dir(state);
-  // console.dir(watchList);
-  // console.log("<=======================>");
+  if(_debug){
+    _outputStateRefresh();
+  }
   
-  const keys = Object.keys(watchList);
-  let len = keys.length;
-  while(len--){
-    let key = keys[len];
-    let list = watchList[key];
-    
-    if(list && list.length>0 && origin[key] !== getter[key]){
-      // console.log(`Now,the ${key} will updata in WatchManager=======>`,origin[key],getter[key]);
-      origin[key] = getter[key];
-      let len2 = list.length;
-      while(len2--){
-        let fn = cbList[list[len2]];
-        fn.call(fn[WM_SCOPE]);
+  updateWatcher();
+  
+}
+/**
+ * @private
+ * 更新监控属性变化的观察者们
+ */
+function updateWatcher(){
+  if(updateList.length<=0){
+    return;
+  }
+  let len = updateList.length;
+  let list;
+  for(let i=0,item;(item=updateList[i])!=null;i++){
+    list = watcherList[item];
+    if(!list || list.length===0){
+      continue;
+    }
+    let newValue = _getters[item];
+    //比较引用或值
+    if(origin[item] !== newValue){
+
+      if(_debug){
+        console.warn(`Now,the ${item} will updata in WatchManager=======>`,_getters[item]);
+      }      
+      //存储新值的引用
+      origin[item] = newValue;
+
+      //更新观察者
+      let len = list.length;
+      while(len--){
+        let watcher = list[len];
+        let value = newValue;
+        let vmp = vmpList[watcher[be_const.VM_ID]];
+        if(typeof watcher.update === 'function' ){
+          value = watcher.update.call(vmp._vm.principal,newValue);
+        }
+        if(_debug){
+          console.log("will call vmp.commit",item,value,vmp._vm);
+        }        
+        //do vmp commit
       }
     }
   }
+  updateList = [];
+}
+
+//only for debug
+function _outputStateRefresh(){
+  const state = _store.getState();
+  console.info("Now,the state refreshed=====>");
+  console.dir(state);
+  // console.dir(watcherList,updateList);
+  // console.log("<=======================>");
 }
 
 //===========================================
-const exportObj = {
-  set store(value){
-    _store = value;
-  },
-  get store(){
-    return _store;
-  },
-
-  watcherify(vm,list){
-
-  },
-  
-  addWatchers(list){
-
-  },
-  /**
-   * 获得一个watcher单例
-   */
-  // getWatchProxy(){
-  //   if(!watcher){
-  //     watcher = new WatchProxy();
-  //   }
-  //   return watcher;
-  // },
-  /**
-   * 合并监控常量
-   * @param {*} propNames  
-   */
-  watchState(interfaceObj,propNames){
-    if(!propNames || !interfaceObj){
-      return;
-    }
-    getter = interfaceObj;
-    Object.assign(this,propNames);
-    
-    // console.log("wm init================>",this,getter);
-  }
-};
+//初始化标识
 let initialized = false;
+/*
+{
+  vmo_id$:vmpId,    //用于调取vmp，然后应用属性值
+  update:updateFn,  //fn，用于在最后提交到vmp进行处理前，进行更新的回调。this值，应该页面或组件的this
+}
+*/
+/**
+ * @private
+ * 内部使用的watcher化函数
+ * @param {*} vmpId 
+ * @param {*} updateFn 
+ */
+function be_watcherify(vmpId,updateFn){
+  let watcher = {};
+  watcher[be_const.VM_ID] = vmpId;
+  if(typeof updateFn === 'function'){
+    watcher.update = updateFn;
+  }
+  return watcher;
+}
+
 //===========================================
-export default {
+module.exports = {
+  /**
+   * @public
+   * 开启/关闭 debug模式
+   */
+  set debug(value){
+    _debug = value;
+  },
+  get debug(){
+    return _debug;
+  },
+  /**
+   * @public
+   * 
+   * 启动WM
+   * @param {Object} store [necessary] store对象
+   * @param {Object} getters [necessary] getters对象
+   */
   setup(store,getters){
-    console.warn("===========>>>",store,getters);
     if(initialized){
       return;
     }
+
     _store = store;
     _getters = getters;
+    
+    //监听state树变化
+    subscribeState();
+    
     initialized = true;
   },
-  watcherify(vm,list){
+  /*
+    {
+      vmp:vmp,
+      prop:'groupList',
+      update:function(){},
+    }
+  */
+  /**
+   * @public
+   * 
+   * watcher化函数，
+   * 可以将属性等参数转化为watcher对象
+   * @param {Object} vmp ViewModuleProxy
+   * @param {Array} list 属性集合
+   */
+  watcherify(vmp,list){
+    let len = list.length;
+    let item;
+    let back = [];
+    while(len--){
+      item = list[len];
+      if(!item){
+        if(_debug){
+          console.error('In WatchManager watcherify(),the element in list is error',len,item);
+        }        
+        continue;
+      }
 
+      if(util.isObject(item)){
+        back[len] = {
+          vmp:vmp,
+          prop:item.prop,
+          update:item.update,
+        };
+      }else if(typeof item === 'string'){
+        back[len] = {
+          vmp:vmp,
+          prop:item,
+        };
+      }
+    }
+    return back;
   },  
-  addWatchers(watchers){
+  /**
+   * @public
+   * 
+   * 添加观察者
+   * @param {Array} watchers [necessary] 观察者集合
+   */
+  addWatchers(...watchers){
     if(!initialized){
       console.warn("WatchManager is not be initialized.");
       return false;
     }
+    const VM_ID = be_const.VM_ID;
     let len = watchers.length;
-    let watcher,prop,list;
+    let watcher,prop,list,vmp;
     while(len--){
       watcher = watchers[len];
+      vmp = watcher.vmp;
+      prop = watcher.prop;
       list = watcherList[prop];
       if(!list){
+        list = [];
         watcherList[prop] = list;
         origin[prop] = _getters[prop];
       }
-      list[length] = watcher;
+      vmpList[vmp[VM_ID]] = vmp;
+      list[list.length] = be_watcherify(watcher.vmp[be_const.VM_ID],watcher.update);
     }
+    if(_debug){
+      console.warn('after add watchers,the watcher list is====>',watcherList);
+      console.warn('after add vmp the vmpList is====>',vmpList);
+    }
+    
+  },
+  /**
+   * @public
+   * 
+   * 提交属性变动
+   * 当state树发生变化，将发生变化的属性键名提交
+   * wm会组成变化集合数组，然后逐一更新观察者们
+   * 
+   * @param {String} propName [necessary] 属性名 
+   */
+  commit(propName){
+    if(typeof propName !== 'string' || updateList.indexOf(propName)!==-1){
+      return;
+    }
+    let list = watcherList[propName];
+    if(!list || list.length<=0){
+      return;
+    }
+    updateList[updateList.length] = propName;
   },
 };
