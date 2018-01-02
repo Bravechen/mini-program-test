@@ -257,12 +257,22 @@ function create(principal){
 
 //============================================
 module.exports = {
+  /**
+   * @public 
+   * 
+   * 开启/关闭 debug模式
+   */
   set debug(value){
     _debug = value;
   },
   get debug(){
     return _debug;
   },
+  /**
+   * @public
+   * 
+   * 设置更新的时间间隔
+   */
   set interval(value){
     if(!Number.isInteger(value)){
       if(_debug){
@@ -280,7 +290,18 @@ module.exports = {
   get interval(){
     return _interval; 
   },
+  /**
+   * @public
+   * 
+   * 创建vm对象和vmp代理对象
+   * @param {Object} principal 
+   */
   create,
+  /**
+   * @internal
+   * 
+   * id常量标识
+   */
   VMO_ID,
 };
 

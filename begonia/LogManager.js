@@ -1,9 +1,11 @@
 /**
- * 日志管理服务类
+ * 日志管理类
+ * 
  * @author Brave Chan on 2017.8
+ * 
  */
 //===============================================
-const util = require('../utils/util');
+import util from './util';
 //==============================================
 let _debug = false;
 const NORMAL = 'l1';
@@ -31,13 +33,17 @@ class LogItem{
 }
 //================================================
 /**
+ * @private
+ * 
  * 变为数组
  * @param {*} list 
  */
 function toArray(list){
     return Array.from(list);
 }
+
 /**
+ * @private
  * 将对象处理成json字符串
  * @param {*} obj 
  */
@@ -50,7 +56,10 @@ function handleObj(obj){
         });
     }
 }
+
 /**
+ *  @private
+ * 
  * 将日志信息整理合并为单条字符串
  * @param {*} list 
  */
@@ -66,6 +75,8 @@ function tidyMessage(list){
 }
 //================================================
 /**
+ *  @public
+ * 
  * 输出普通日志
  */
 function trace(){
@@ -77,6 +88,8 @@ function trace(){
     }
 }
 /**
+ *  @public
+ * 
  * 输出信息日志
  */
 function info(){
@@ -88,6 +101,8 @@ function info(){
     }
 }
 /**
+ *  @public
+ * 
  * 输出错误日志
  */
 function error(){
@@ -99,6 +114,8 @@ function error(){
     }
 }
 /**
+ * @public
+ * 
  * 输出警告日志
  */
 function warn(){
@@ -115,13 +132,82 @@ module.exports = {
     info,
     error,
     warn,
+    /**
+     * 获取日志信息列表
+     */
     get logList(){
         return _logList;
     },
+    /**
+     * 开启/关闭 debug模式
+     */
     set debug(value){
         _debug = !!value;
     },
     get debug(){
         return _debug;
-    }
+    },
+    /**
+     * 启动log
+     */
+    setup(){},
+    /**
+     * 装饰函数
+     * 可以为vmp对象提供快捷使用方法
+     * @param {ViewModelProxy} vmp 
+     */
+    decorator(vmp){
+        if(typeof vmp.trace === 'undefined'){
+            vmp.trace = trace;
+        }else{
+            if(_debug){
+                console.error("In LogManager,when do decorate vmp,there is same key of trace in vmp already,please check.");
+            }            
+            return;
+        }
+
+        if(typeof vmp.info === 'undefined'){
+            vmp.info = info;
+        }else{
+            if(_debug){
+                console.error("In LogManager,when do decorate vmp,there is same key of info in vmp already,please check.");
+            }            
+            return;
+        }
+
+        if(typeof vmp.error === 'undefined'){
+            vmp.error = error;
+        }else{
+            if(_debug){
+                console.error("In LogManager,when do decorate vmp,there is same key of error in vmp already,please check.");
+            }            
+            return;
+        }
+
+        if(typeof vmp.warn === 'undefined'){
+            vmp.warn = warn;
+        }else{
+            if(_debug){
+                console.error("In LogManager,when do decorate vmp,there is same key of warn in vmp already,please check.");
+            }            
+            return;
+        }
+    },
+    /**
+     * 清理vmp上的装饰函数
+     * @param {ViewModelProxy} vmp 
+     */
+    clearVMP(vmp){
+        vmp.trace = null;
+        vmp.info = null;
+        vmp.error = null;
+        vmp.warn = null;
+    },
+    /**
+     * @internal
+     * 进行销毁LogManager的操作
+     */
+    destroy(){
+        _logList = null;
+    },
 };

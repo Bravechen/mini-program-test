@@ -13,6 +13,7 @@ import util from './util';
 const M_ID = 'be_m_id$';
 let decorators = [];
 let moduleList = [];
+let _debug = false;
 //=======================================================
 /**
  * @public
@@ -132,6 +133,24 @@ function doDecorate(vmp,list){
 
 //=========================================
 module.exports = {
+    set debug(value){
+        _debug = value;
+    },
+    get debug(){
+        return _debug;
+    },
+    /**
+     * @public
+     * 获得一个小程序页面或组件实例的代理
+     * @param {Object} principal [necessary] 小程序页面或者组件的实例
+     * @return {Object}
+     */
     getProxy,
+    /**
+     * @public
+     * 
+     * 增加程序运行中需要使用的增强模块
+     * @param {*} addModule [necessary] 增强模块 
+     */
     use,
 };

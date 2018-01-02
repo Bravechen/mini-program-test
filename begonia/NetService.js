@@ -3,7 +3,7 @@
  * @author Brave Chan on 2017.8.24
  */
 //===============================================
-const Log = require('./LogService');
+import Log from './LogManager';
 //===============================================
 const prompt = {
     '2g':function(goodFn,badFn){
@@ -59,9 +59,11 @@ let _changeToGoodFn,_changeToBadFn;
 let netChangeBad = false;
 //================================================
 /**
+ * @public
+ * 
  * 监控网络状态
- * @param {*} changeToGoodFn 
- * @param {*} changeToBadFn 
+ * @param {Function} changeToGoodFn 网络变好时的回调 
+ * @param {Function} changeToBadFn 网络变差是的回调
  */
 function watchNet(changeToGoodFn,changeToBadFn){
     _changeToGoodFn = changeToGoodFn;
@@ -91,9 +93,11 @@ function watchNet(changeToGoodFn,changeToBadFn){
 }
 
 /**
+ * @public
+ * 
  * 检测网络状态
- * @param {*} goodFn 
- * @param {*} badFn 
+ * @param {Function} goodFn [optional] 网络情况好时调用该回调
+ * @param {Function} badFn [optional] 网络情况不好时调用该回调
  */
 function checkNet(goodFn,badFn){
     wx.getNetworkType({
@@ -117,6 +121,20 @@ function checkNet(goodFn,badFn){
 
 //============================================
 module.exports = {
+    /**
+     * @public
+     * 
+     * 监控网络状态
+     * @param {Function} changeToGoodFn 网络变好时的回调 
+     * @param {Function} changeToBadFn 网络变差是的回调
+     */
     checkNet,
+    /**
+     * @public
+     * 
+     * 检测网络状态
+     * @param {Function} goodFn [optional] 网络情况好时调用该回调
+     * @param {Function} badFn [optional] 网络情况不好时调用该回调
+     */
     watchNet,
 };
