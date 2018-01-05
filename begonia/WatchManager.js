@@ -9,7 +9,7 @@ import be_const from './beconst';
 //============================================================
 let _debug = false;
 //监控state属性引用和值集合
-const origin = {};
+let origin = {};
 /*
   {
     vm_id:vmp
@@ -90,6 +90,7 @@ function updateWatcher(){
           console.log("will call vmp.commit",item,value,vmp._vm);
         }        
         //do vmp commit
+        vmp.commit(item,value);
       }
     }
   }

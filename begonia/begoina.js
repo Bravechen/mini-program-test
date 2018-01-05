@@ -123,7 +123,7 @@ function doDecorate(vmp,list){
     while(len--){
         list[len](vmp);
 
-        //将vmp本身的destory方法赋予别名
+        //将vmp本身的destroy方法赋予别名
         //然后使用提供的包装函数包装
         //以备进行更完整的清理
         vmp._destroy = vmp.destroy;

@@ -11,7 +11,7 @@
  * @author Brave Chan on 2017.12 
  */
 //===================================================
-import util from require('./util');
+import util from './util';
 import WM from './WatchManager';
 //===================================================
 let renderList = {};
@@ -65,7 +65,7 @@ class VM{
   /**
    * 销毁对象
    */
-  destory(){
+  destroy(){
     this.optData = null;
     this[VMO_ID] = null;
     this.principal = null;
@@ -118,7 +118,7 @@ class VMProxy{
    * @public
    * 销毁vmp和vm
    */
-  destory(){
+  destroy(){
     if(this.props){
       const keys = Object.keys(this.props);
       for(let value of keys){
@@ -126,7 +126,7 @@ class VMProxy{
       }
       this.props = null;
     }    
-    destoryVMO(this[VMO_ID]);  
+    destroyVM(this[VMO_ID]);  
   }
 }
 //===============================================
@@ -175,13 +175,13 @@ function commitProperties(id,opt){
  * 销毁一个VM实例
  * @param {String} id [necessary] vm的id
  */
-function destoryVM(id){
+function destroyVM(id){
   let vm = vmList[id];
-  return vm?vm.destory():null;
+  return vm?vm.destroy():null;
 }
 
 //only for debug
-function _outputVMOS(){
+function _outputVMS(){
   return vmList;
 }
 

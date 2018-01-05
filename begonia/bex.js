@@ -123,7 +123,7 @@ function createReducer(_state={},reducers,cb){
                         return;
                     }
                     state = Object.assign({},state,{[key]:value});
-                    console.log("==%%%%==========>>",state[key],state);
+                    // console.log("==%%%%==========>>",state[key],state);
                     cb(key);
                 },
                 get(){
