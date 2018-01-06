@@ -3,7 +3,7 @@
  * @author Brave Chan on 2017.8.24
  */
 //===============================================
-import Log from './LogManager';
+let _debug = false;
 //===============================================
 const prompt = {
     '2g':function(goodFn,badFn){
@@ -111,7 +111,9 @@ function checkNet(goodFn,badFn){
             }
         },
         fail:function(error){
-            Log.error("In NetService checkNet(), Call wx net api error,can not check net type.====>",error);
+            if(_debug){
+                console.error("In NetService checkNet(), Call wx net api error,can not check net type.====>",error);
+            }            
         },
     });
 }
@@ -121,6 +123,12 @@ function checkNet(goodFn,badFn){
 
 //============================================
 module.exports = {
+    set debug(value){
+        _debug = value;
+    },
+    get debug(){
+        return _debug;
+    },
     /**
      * @public
      * 

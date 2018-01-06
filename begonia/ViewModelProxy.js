@@ -12,8 +12,8 @@
  */
 //===================================================
 import util from './util';
-import WM from './WatchManager';
 //===================================================
+let _WM;
 let renderList = {};
 let vmList = {};
 const VMO_ID = 'vmo_id$';

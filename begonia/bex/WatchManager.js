@@ -4,7 +4,7 @@
  * @author Brave Chan on 2017.12
  */
 //===========================================================
-import util from './util';
+import util from '../util';
 import be_const from './beconst';
 //============================================================
 let _debug = false;

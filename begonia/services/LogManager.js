@@ -5,7 +5,7 @@
  * 
  */
 //===============================================
-import util from './util';
+import util from '../util';
 //==============================================
 let _debug = false;
 const NORMAL = 'l1';
