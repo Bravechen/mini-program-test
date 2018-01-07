@@ -112,8 +112,12 @@ function unwatch(prop){
 function createReducer(_state={},reducers,cb){
 
     return function(state=_state,action){
-
         let proxy = {};
+        let tProxy = {
+            get state(){
+                return proxy;
+            },
+        };        
         let props = {};
         let keys = Object.keys(state);
         for(let key of keys){
@@ -123,7 +127,7 @@ function createReducer(_state={},reducers,cb){
                         return;
                     }
                     state = Object.assign({},state,{[key]:value});
-                    // console.log("==%%%%==========>>",state[key],state);
+                    // console.log(key,"==%%%%==========>>",state[key],state);
                     cb(key);
                 },
                 get(){
@@ -135,7 +139,7 @@ function createReducer(_state={},reducers,cb){
 
         let fn = reducers[action.type];
         if(typeof fn === 'function'){
-            fn.call(null,proxy,action);
+            fn.call(null,tProxy.state,action);
         }
         
         return state;

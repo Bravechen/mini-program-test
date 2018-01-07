@@ -17,20 +17,20 @@ class Chain{
   /**
    * 构造函数
    * @param {Array} list [necessary] 需要进行链式执行的函数队列
-   * @param {Function} doneFn [optional] 执行完毕所有函数后的回调
+   * @param {Function} complete [optional] 执行完毕所有函数后的回调
    * 遵从`function(error[,data])`
    * - error 如果队列执行中发生错误，将作为第一个参数被返回
    * - data 如果最后一次调用`next()`传入了参数，参数将会作为回调函数的参数被返回
    * @param {*} scope 希望队列中的函数和回调函数中的this指向
    * @return {Chain}
    */
-  constructor(list,doneFn,scope){
+  constructor(list,complete,scope){
     this.id = util.getSysId();
     //加入链对象列表，生成一个结果状态对象
     addChain(this.id);
     this.execList = list;
     this._index = 0;
-    this._doneFn = typeof doneFn === 'function'?doneFn:noop;
+    this._doneFn = typeof complete === 'function'?complete:noop;
     this._scope = scope;
 
     //代理对象，作为传入队列中每个函数的参数之一
@@ -108,16 +108,16 @@ class Chain{
    * 重置
    * 重置之后的chain可以再被使用
    * @param {Array} list [necessary] 需要进行链式执行的函数队列
-   * @param {Function} doneFn [optional] 执行完毕所有函数后的回调
+   * @param {Function} complete [optional] 执行完毕所有函数后的回调
    * 遵从`function(error[,data])`
    * - error 如果队列执行中发生错误，将作为第一个参数被返回
    * - data 如果最后一次调用`next()`传入了参数，参数将会作为回调函数的参数被返回
    * @param {*} scope 希望队列中的函数和回调函数中的this指向
    */
-  reset(list=[],done,scope){
+  reset(list=[],complete,scope){
     this._index = 0;
     this.execList = list;
-    this._doneFn = typeof done === 'function'?done:noop;
+    this._doneFn = typeof complete === 'function'?complete:noop;
     this._scope = scope;
     this._backValue = null;
     addChain(this.id);
@@ -193,15 +193,15 @@ module.exports = {
   /**
    * 获得一个chain对象
    * @param {Array} list [necessary] 需要进行链式执行的函数队列
-   * @param {Function} doneFn [optional] 执行完毕所有函数后的回调
+   * @param {Function} complete [optional] 执行完毕所有函数后的回调
    * 遵从`function(error[,data])`
    * - error 如果队列执行中发生错误，将作为第一个参数被返回
    * - data 如果最后一次调用`next()`传入了参数，参数将会作为回调函数的参数被返回
    * @param {*} scope 希望队列中的函数和回调函数中的this指向
    */
-  getChain(list,done,scope){
+  getChain(list,complete,scope){
     if(list && list.length>0){
-      return new Chain(list,done,scope);
+      return new Chain(list,complete,scope);
     }
   }
 };
