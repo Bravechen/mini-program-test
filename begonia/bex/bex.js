@@ -52,13 +52,13 @@ function mapActions(list){
     if(!list || list.length<=0){
         return [];
     }
-    let back = [];
+    let back = {};
     let len = list.length;
     let fn;
     while(len--){
         fn = _actions[list[len]];
         if(typeof fn === 'function'){
-            back[len] = fn;
+            back[list[len]] = fn;
         }else{
             console.error('The name in list who is param,is error====>index:',len,'function name:',list[len]);
         }
@@ -273,7 +273,7 @@ function stateChanged(key){
 }
 
 //=======================================================
-export default {
+module.exports = {
     /**
      * @public
      * 系统创建的唯一store

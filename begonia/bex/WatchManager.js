@@ -160,6 +160,10 @@ module.exports = {
     //监听state树变化
     subscribeState();
     
+    if(_debug){
+      _outputStateRefresh();
+    }
+
     initialized = true;
   },
   /*

@@ -1,5 +1,5 @@
-import BE from '../common/begoina';
-import bex from '../common/bex';
+import BE from '../begonia/begoina';
+import bex from '../begonia/bex/bex';
 
 import group from './group';
 import subject from './subject';
