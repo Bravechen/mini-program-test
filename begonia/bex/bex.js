@@ -12,7 +12,7 @@ import WM from './WatchManager';
 let _store;
 let _getters;
 let _actions;
-let debug = true;
+let _debug = true;
 //===================================================
 /**
  * @public
@@ -24,7 +24,9 @@ function createStore(opt){
     if(_store){
         return _store;
     }
-    debug = opt.debug;
+    if(typeof opt.debug !== 'undefined'){
+        _debug = opt.debug;
+    }
     let [allReducers,getters,actions] = handleModules({},{},{},opt.modules,stateChanged);
     _actions = actions;
     let state = opt.state || {};
@@ -34,7 +36,7 @@ function createStore(opt){
     _store.dispatch({});//考虑一下
     _getters = getters;
 
-    WM.debug = debug;
+    WM.debug = _debug;
     WM.setup(_store,_getters);
     
     return _store;
@@ -270,7 +272,7 @@ function handleActions(actions,branch,branchActions){
  * @param {String} key [necessary] 变化的分支属性键名 
  */
 function stateChanged(key){
-    if(debug){
+    if(_debug){
         console.warn("The state has changed====>props:",key);
     }    
     WM.commit(key);
@@ -278,6 +280,13 @@ function stateChanged(key){
 
 //=======================================================
 module.exports = {
+    set debug(value){
+        _debug = value;
+        WM.debug = _debug;
+    },
+    get debug(){
+        return _debug;
+    },
     /**
      * @public
      * 系统创建的唯一store

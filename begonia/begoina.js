@@ -15,6 +15,8 @@ let decorators = [];
 let moduleList = [];
 let _debug = false;
 //=======================================================
+use(VMP);
+//=======================================================
 /**
  * @public
  * 获得一个小程序页面或组件实例的代理
@@ -61,6 +63,8 @@ function use(addModule){
     if(typeof am.setup === 'function'){
         am.setup();
     }
+
+    am.debug = _debug;
 }
 /**
  * @public
@@ -74,10 +78,19 @@ function use(addModule){
  * 以备gc回收
  * 
  */
+let index = 0;
 function destroyVMP(){
+    index++;
+    if(index>100){
+        return;
+    }
     let len = moduleList.length;
+    let am;
     while(len--){
-        moduleList[len].clearVMP(this);
+        am = moduleList[len];
+        if(am && typeof am.clearVMP === 'function'){
+            am.clearVMP(this);
+        }
     }
     this._destroy();
 }
@@ -121,13 +134,19 @@ function doDecorate(vmp,list){
     }
     let len = list.length;
     while(len--){
-        list[len](vmp);
+        list[len](vmp);       
+    }
+    //将vmp本身的destroy方法赋予别名
+    //然后使用提供的包装函数包装
+    //以备进行更完整的清理
+    vmp._destroy = vmp.destroy;
+    vmp.destroy = destroyVMP;
+}
 
-        //将vmp本身的destroy方法赋予别名
-        //然后使用提供的包装函数包装
-        //以备进行更完整的清理
-        vmp._destroy = vmp.destroy;
-        vmp.destroy = destroyVMP;
+function setModulesDebug(debug,list){
+    let len = list.length;
+    while(len--){
+        list[len].debug = debug;
     }
 }
 
@@ -135,6 +154,7 @@ function doDecorate(vmp,list){
 module.exports = {
     set debug(value){
         _debug = value;
+        setModulesDebug(_debug,moduleList);
     },
     get debug(){
         return _debug;

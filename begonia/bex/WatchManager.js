@@ -73,7 +73,8 @@ function updateWatcher(){
 
       if(_debug){
         console.warn(`Now,the ${item} will updata in WatchManager=======>`,_getters[item]);
-      }      
+      } 
+           
       //存储新值的引用
       origin[item] = newValue;
 
@@ -84,11 +85,14 @@ function updateWatcher(){
         let value = newValue;
         let vmp = vmpList[watcher[be_const.VM_ID]];
         if(typeof watcher.update === 'function' ){
-          value = watcher.update.call(vmp._vm.principal,newValue);
+          let t = watcher.update.call(vmp._vm.principal,newValue);
+          if(t){
+            value = t;
+          }
         }
         if(_debug){
           console.log("will call vmp.commit",item,value,vmp._vm);
-        }        
+        }   
         //do vmp commit
         vmp.commit(item,value);
       }

@@ -198,6 +198,9 @@ module.exports = {
      * @param {ViewModelProxy} vmp 
      */
     clearVMP(vmp){
+        if(!vmp){
+            return;
+        }
         vmp.trace = null;
         vmp.info = null;
         vmp.error = null;

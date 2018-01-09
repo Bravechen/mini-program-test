@@ -43,11 +43,23 @@ class VM{
     if(noUse){
       return;
     }
-    
-    this.principal.setData(this.optData);
+    let canUse = this && this.principal && typeof this.principal.setData === 'function';
+    if(canUse){
+      // if(_debug){
+      //   console.warn("The vm ===>",this.principal,"will validate props===>",this.optData);
+      // }
 
-    //重置对象等待下一次
-    this.optData = {};
+      this.principal.setData(this.optData);
+      
+      //重置对象等待下一次
+      this.optData = {};
+    }else{
+      if(_debug){
+        console.error("In VMP vm validate(),the scope/principal/setData error");
+      }
+    }    
+
+    //如果canUse === false，那么将累积设置，这点需要仔细考虑解决方法    
   }
   /**
    * @internal
