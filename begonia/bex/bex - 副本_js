@@ -62,9 +62,7 @@ function mapActions(list){
         if(typeof fn === 'function'){
             back[list[len]] = fn;
         }else{
-            if(_debug){
-                console.error('The name in list who is param,is error====>index:',len,'function name:',list[len]);
-            }            
+            console.error('The name in list who is param,is error====>index:',len,'function name:',list[len]);
         }
     }
 
@@ -114,38 +112,39 @@ function unwatch(prop){
  * @return {Function} reducer函数 
  */
 function createReducer(_state={},reducers,cb){
-    let outState = _state;
-    let proxy = {};
-    let tProxy = {
-        get state(){
-            return proxy;
-        },
-    };        
-    let props = {};
-    let keys = Object.keys(outState);
-    for(let key of keys){
-        props[key] = {
-            set(value){
-                if(value === outState[key]){
-                    return;
-                }
-                outState = Object.assign({},outState,{[key]:value});
-                cb(key);
-            },
-            get(){
-                return outState[key];
-            }
-        };
-    }
-    Object.defineProperties(proxy,props);
 
     return function(state=_state,action){
-        outState = state;
+        let proxy = {};
+        let tProxy = {
+            get state(){
+                return proxy;
+            },
+        };        
+        let props = {};
+        let keys = Object.keys(state);
+        for(let key of keys){
+            props[key] = {
+                set(value){
+                    if(value === state[key]){
+                        return;
+                    }
+                    state = Object.assign({},state,{[key]:value});
+                    // console.log(key,"==%%%%==========>>",state[key],state);
+                    cb(key);
+                },
+                get(){
+                    return state[key];
+                }
+            };
+        }
+        Object.defineProperties(proxy,props);
+
         let fn = reducers[action.type];
         if(typeof fn === 'function'){
             fn.call(null,tProxy.state,action);
-        }        
-        return outState;
+        }
+        
+        return state;
     }
 }
 
@@ -241,6 +240,7 @@ function handleGetters(getters,branch,branchGetters){
         return;
     }
     createGetters(getters,branch,branchGetters)();
+    // console.log("@@@===========>>>",branch,getters);
 }
 
 /**

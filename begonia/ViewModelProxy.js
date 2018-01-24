@@ -45,9 +45,9 @@ class VM{
     }
     let canUse = this && this.principal && typeof this.principal.setData === 'function';
     if(canUse){
-      // if(_debug){
-      //   console.warn("The vm ===>",this.principal,"will validate props===>",this.optData);
-      // }
+      if(_debug){
+        console.warn("In VMP vm validate(),The vm ===>",this.principal,"will validate props===>",this.optData);
+      }
 
       this.principal.setData(this.optData);
       
@@ -68,10 +68,16 @@ class VM{
    * @param {*} value 
    */
   commit(propName,value){
-    if(this.optData[propName] === value){
+    let canUse = this && this.optData && this.optData[propName] !== value;
+    if(!canUse){
       return;
     }    
     this.optData[propName] = value;
+    if(_debug){
+      console.warn("In VMP vm commit(),commit prop==>",propName,value);
+      console.log(this.optData,this[VMO_ID]);
+    }
+    
     addRender(this[VMO_ID]);
   }
   /**
@@ -131,13 +137,13 @@ class VMProxy{
    * 销毁vmp和vm
    */
   destroy(){
-    if(this.props){
-      const keys = Object.keys(this.props);
-      for(let value of keys){
-        this.props[value] = null;
-      }
-      this.props = null;
-    }    
+    // if(this.props){
+    //   const keys = Object.keys(this.props);
+    //   for(let value of keys){
+    //     this.props[value] = null;
+    //   }
+    //   this.props = null;
+    // }    
     destroyVM(this[VMO_ID]);  
   }
 }
@@ -152,9 +158,9 @@ function validateNow(id){
   if(!vm){
     return;
   }
-
-  if(renderList[vm[VMO_ID]]){
-    renderList[vm[VMO_ID]] = false;
+  let vmId = vm[VMO_ID];
+  if(renderList[vmId]){
+    renderList[vmId] = void 0;
   }
   vm.validate();
 }
@@ -189,6 +195,7 @@ function commitProperties(id,opt){
  */
 function destroyVM(id){
   let vm = vmList[id];
+  vmList[id] = void 0;
   return vm?vm.destroy():null;
 }
 
@@ -227,15 +234,15 @@ function validateProperties(){
   clearTimeout(renderTimer);
   renderTimer = null;
 
-  let vm,
-      keys = Object.keys(renderList);
+  let vm,keys = Object.keys(renderList);
   for(let value of keys){
     vm = vmList[value];
     if(vm && renderList[value]){
       vm.validate();
-    }    
+      renderList[value] = void 0;
+    }
   }
-  renderList = {};
+  // renderList = {}; //bug 有时计时器延迟，引起不必要的删除，暂时注释，改为赋值undefined
 }
 /**
  * 将参数对象的属性键名生成字符串

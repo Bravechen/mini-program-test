@@ -73,7 +73,7 @@ function updateWatcher(){
 
       if(_debug){
         console.warn(`Now,the ${item} will updata in WatchManager=======>`,_getters[item]);
-      } 
+      }
            
       //存储新值的引用
       origin[item] = newValue;
@@ -85,14 +85,27 @@ function updateWatcher(){
         let value = newValue;
         let vmp = vmpList[watcher[be_const.VM_ID]];
         if(typeof watcher.update === 'function' ){
+          let canUse = vmp && vmp._vm && vmp._vm.principal;
+          if(!canUse){
+            if(_debug){
+              console.error("In WatchManager updateWatcher(),vmp/vm/principal,not right.",`vmp:`,vmp);
+            }            
+            return;
+          }
           let t = watcher.update.call(vmp._vm.principal,newValue);
           if(t){
             value = t;
           }
+        }else if(_debug){
+          console.log(`In WatchManager updateWatcher(),
+            the ${item} is not set update or the update's type is not function.
+            If you need update the value before use vm.setData(),you should check.
+            If not,do not need care this.`);
         }
+        
         if(_debug){
           console.log("will call vmp.commit",item,value,vmp._vm);
-        }   
+        }
         //do vmp commit
         vmp.commit(item,value);
       }
@@ -221,7 +234,9 @@ module.exports = {
    */
   addWatchers(...watchers){
     if(!initialized){
-      console.warn("WatchManager is not be initialized.");
+      if(_debug){
+        console.warn("WatchManager is not be initialized.");
+      }      
       return false;
     }
     const VM_ID = be_const.VM_ID;
@@ -299,6 +314,9 @@ module.exports = {
     }
     let list = watcherList[propName];
     if(!list || list.length<=0){
+      if(_debug){
+        console.warn("In WM commit(),there is no vmp watcher the prop===>",watcherList[propName],propName,watcherList);
+      }      
       return;
     }
     updateList[updateList.length] = propName;

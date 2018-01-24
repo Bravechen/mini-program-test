@@ -113,7 +113,7 @@ function checkNet(goodFn,badFn){
         fail:function(error){
             if(_debug){
                 console.error("In NetService checkNet(), Call wx net api error,can not check net type.====>",error);
-            }            
+            }
         },
     });
 }
